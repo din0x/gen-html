@@ -1,30 +1,7 @@
 use std::{borrow::Cow, collections::BTreeMap, fmt};
 
-/// Valid HTML attribute name
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub(crate) struct AttrName(Cow<'static, str>);
-
-impl AttrName {
-    /// Creates valid attribute name
-    ///
-    /// # Panics
-    /// If `name` is not a valid attribute
-    pub fn new(name: impl Into<Cow<'static, str>>) -> Self {
-        let name: Cow<_> = name.into();
-
-        if name.contains(|ch| !char::is_ascii_lowercase(&ch) && ch != '-') {
-            panic!("invalid attribute")
-        }
-
-        Self(name)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct AttrValue(Cow<'static, str>);
-
 pub struct Attrs {
-    attrs: BTreeMap<AttrName, AttrValue>,
+    attrs: BTreeMap<Cow<'static, str>, Cow<'static, str>>,
 }
 
 impl Attrs {
@@ -34,27 +11,12 @@ impl Attrs {
         }
     }
 
-    pub fn set_lang(&mut self, lang: Cow<'static, str>) {
-        self.attrs.insert(AttrName::new("lang"), AttrValue(lang));
-    }
-
-    pub fn set_class(&mut self, class: Class) {
-        self.attrs
-            .insert(AttrName::new("class"), AttrValue(class.0));
-    }
-
-    pub(crate) fn set_charset(&mut self, charset: Cow<'static, str>) {
-        self.attrs
-            .insert(AttrName::new("charset"), AttrValue(charset));
-    }
-
-    pub(crate) fn set_name(&mut self, name: Cow<'static, str>) {
-        self.attrs.insert(AttrName::new("name"), AttrValue(name));
-    }
-
-    pub(crate) fn set_content(&mut self, content: Cow<'static, str>) {
-        self.attrs
-            .insert(AttrName::new("content"), AttrValue(content));
+    pub fn insert(
+        &mut self,
+        attr: impl Into<Cow<'static, str>>,
+        value: impl Into<Cow<'static, str>>,
+    ) {
+        self.attrs.insert(attr.into(), value.into());
     }
 }
 
@@ -63,26 +25,14 @@ impl fmt::Display for Attrs {
         self.attrs
             .iter()
             .map(|(k, v)| {
-                if v.0.is_empty() {
-                    write!(f, " {}", k.0,)
+                if v.is_empty() {
+                    write!(f, " {}", k,)
                 } else {
-                    let escaped = html_escape::encode_double_quoted_attribute(&v.0);
+                    let escaped = html_escape::encode_double_quoted_attribute(&v);
 
-                    write!(f, " {}=\"{}\"", k.0, escaped)
+                    write!(f, " {}=\"{}\"", k, escaped)
                 }
             })
             .collect()
-    }
-}
-
-pub struct Class(Cow<'static, str>);
-
-pub trait IntoClass {
-    fn into_class(self) -> Class;
-}
-
-impl<T: Into<Cow<'static, str>>> IntoClass for T {
-    fn into_class(self) -> Class {
-        Class(self.into())
     }
 }
