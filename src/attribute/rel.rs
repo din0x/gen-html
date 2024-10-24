@@ -287,20 +287,6 @@ impl_rel_from!(LinkRelList, LinkRel);
 impl_rel_from!(AnchorRelList, AnchorRel);
 impl_rel_from!(FormRelList, FormRel);
 
-macro_rules! impl_transparent_rel_from {
-    ($($name:ident),*) => {
-        $(
-            impl<T: Into<$name>> From<T> for concat_idents!($name, List) {
-                fn from(value: T) -> Self {
-
-                }
-            }
-        )*
-    };
-}
-
-// impl_transparent_rel_from!(LinkRel, AnchorRel, FormRel);
-
 macro_rules! impl_attribute_for_rel {
     ($($rel:ident),*) => {
         $(

@@ -6,7 +6,7 @@
 
 // TODO: Add `datetime` attribute.
 
-use crate::{generate::create_element, NonInteractiveContent, PhrasingContent};
+use crate::generate::create_element;
 
 create_element! {
     "The `<ins>` HTML element represents a range of text that has been added to a document. You can use the [`<del>`](del) element to similarly represent a range of text that has been deleted from the document.",
