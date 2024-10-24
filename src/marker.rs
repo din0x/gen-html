@@ -18,23 +18,23 @@ pub trait Render: Sized {
 /// phrasing elements, embedding elements, interactive elements, and
 /// form-related elements. It also includes text nodes (but not those that only
 /// consist of white space characters).
-/// 
+///
 /// [Flow content]: https://developer.mozilla.org/en-US/docs/Web/HTML/Content_categories#flow_content
 pub trait FlowContent: Render {}
 
 /// The Phrasing content category.
-/// 
+///
 /// [Phrasing content], a subset of flow content, refers to the text and the
 /// markup within a document. Sequences of phrasing content make up paragraphs.
-/// 
+///
 /// [Phrasing content]: https://developer.mozilla.org/en-US/docs/Web/HTML/Content_categories#phrasing_content
 pub trait PhrasingContent: FlowContent {}
 
 /// Non-interactive content category.
-/// 
+///
 /// [Interactive content], a subset of flow content, includes elements that are
 /// specifically designed for user interaction.
-/// 
+///
 /// [Interactive content]: https://developer.mozilla.org/en-US/docs/Web/HTML/Content_categories#interactive_content
 pub trait NonInteractiveContent: Render {}
 

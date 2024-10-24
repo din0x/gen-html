@@ -115,7 +115,7 @@ impl Attribute for Lang {
 }
 
 /// The `target` HTML attribute.
-/// 
+///
 /// The `target` attribute specifies where to open the linked document.
 #[non_exhaustive]
 #[derive(Debug, Display)]
