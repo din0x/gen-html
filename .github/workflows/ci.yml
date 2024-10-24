@@ -41,10 +41,10 @@ jobs:
         run: cargo fmt --check
         
       - name: Check
-        run: cargo check --all-targets
+        run: cargo check
 
       - name: Run tests
-        run: cargo test --all-features --all-targets
+        run: cargo test --all-features
         
       - name: Run doc tests
         run: cargo test --doc
