@@ -6,24 +6,24 @@
 //!
 //! [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/HTML/Element#content_sectioning)
 
-use crate::{element::flow_elem, Flow, Phrasing};
+use crate::{element::flow_elem, FlowContent, PhrasingContent};
 
-flow_elem!(pub Address, address, Flow);
-flow_elem!(pub Article, article, Flow);
-flow_elem!(pub Aside, aside, Flow);
-flow_elem!(pub Footer, footer, Flow);
-flow_elem!(pub Header, header, Flow);
+flow_elem!(pub Address, address, FlowContent, content);
+flow_elem!(pub Article, article, FlowContent, content);
+flow_elem!(pub Aside, aside, FlowContent, content);
+flow_elem!(pub Footer, footer, FlowContent, content);
+flow_elem!(pub Header, header, FlowContent, content);
 
-flow_elem!(pub H1, h1, Phrasing);
-flow_elem!(pub H2, h2, Phrasing);
-flow_elem!(pub H3, h3, Phrasing);
-flow_elem!(pub H4, h4, Phrasing);
-flow_elem!(pub H5, h5, Phrasing);
-flow_elem!(pub H6, h6, Phrasing);
+flow_elem!(pub H1, h1, PhrasingContent, content);
+flow_elem!(pub H2, h2, PhrasingContent, content);
+flow_elem!(pub H3, h3, PhrasingContent, content);
+flow_elem!(pub H4, h4, PhrasingContent, content);
+flow_elem!(pub H5, h5, PhrasingContent, content);
+flow_elem!(pub H6, h6, PhrasingContent, content);
 
 // TODO: `hgroup`
 
-flow_elem!(pub Main, main, Flow);
-flow_elem!(pub Nav, nav, Flow);
-flow_elem!(pub Section, section, Flow);
-flow_elem!(pub Search, search, Flow);
+flow_elem!(pub Main, main, FlowContent, content);
+flow_elem!(pub Nav, nav, FlowContent, content);
+flow_elem!(pub Section, section, FlowContent, content);
+flow_elem!(pub Search, search, FlowContent, content);

@@ -1,21 +1,21 @@
 use std::borrow::Cow;
 
-use crate::{element::elem, Flow, Html};
+use crate::{element::elem, FlowContent, Render};
 
-elem!("", Body, body, Flow,);
-elem!("", Head, head, Html,);
-elem!("", HtmlBase, html, Html,);
+elem!("", Body, body, FlowContent,);
+elem!("", Head, head, Render,);
+elem!("", HtmlBase, html, Render,);
 
-elem!("", Title, title, Html,);
+elem!("", Title, title, Render,);
 
-pub struct Page<T: Flow> {
+pub struct Page<T: FlowContent> {
     title: Cow<'static, str>,
     #[cfg(feature = "css-style")]
     style: Option<crate::css_style::Style>,
     body: T,
 }
 
-impl<T: Flow> Page<T> {
+impl<T: FlowContent> Page<T> {
     #[cfg(feature = "css-style")]
     pub fn style(mut self, style: crate::css_style::Style) -> Self {
         self.style = Some(style);
@@ -23,10 +23,10 @@ impl<T: Flow> Page<T> {
     }
 }
 
-impl<T: Flow> Html for Page<T> {
-    fn fmt_html(self, target: &mut dyn std::fmt::Write) -> std::fmt::Result {
+impl<T: FlowContent> Render for Page<T> {
+    fn render(self, target: &mut dyn std::fmt::Write) -> std::fmt::Result {
         #[cfg(not(feature = "css-style"))]
-        return html((head(title(self.title)), body(self.body))).fmt_html(target);
+        return html((head(title(self.title)), body(self.body))).render(target);
         #[cfg(feature = "css-style")]
         {
             let mut body = body(self.body);
@@ -43,7 +43,7 @@ impl<T: Flow> Html for Page<T> {
 pub fn page<Title, Content>(title: Title, body: Content) -> Page<Content>
 where
     Title: Into<Cow<'static, str>>,
-    Content: Flow,
+    Content: FlowContent,
 {
     Page {
         body,

@@ -3,12 +3,25 @@ use std::borrow::Cow;
 
 use derive_more::derive::Display;
 
+pub mod rel;
+
+/// The `class` HTML attribute.
 #[derive(Default)]
 pub struct ClassList(Vec<Class>);
 
 impl ClassList {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+}
+
+impl Attribute for ClassList {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        if self.is_empty() {
+            return Ok(());
+        }
+
+        write!(target, " {attr}=\"{}\"", self)
     }
 }
 
@@ -73,6 +86,12 @@ impl Id {
     }
 }
 
+impl Attribute for Id {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        write!(target, " {attr}=\"{}\"", self.0)
+    }
+}
+
 #[derive(Debug, Display, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[display("{lang}")]
 pub struct Lang {
@@ -82,5 +101,134 @@ pub struct Lang {
 impl Lang {
     pub fn new(lang: impl Into<Cow<'static, str>>) -> Self {
         Self { lang: lang.into() }
+    }
+}
+
+impl Attribute for Lang {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        write!(
+            target,
+            " {attr}=\"{}\"",
+            html_escape::encode_double_quoted_attribute(&self.lang)
+        )
+    }
+}
+
+/// The `target` HTML attribute.
+/// 
+/// The `target` attribute specifies where to open the linked document.
+#[non_exhaustive]
+#[derive(Debug, Display)]
+pub enum Target {
+    /// Opens the linked document in a new window or tab.
+    #[display("_blank")]
+    Blank,
+    /// Opens the linked document in the same frame as it was clicked (default).
+    #[display("self_")]
+    Self_,
+    /// Opens the linked document in the parent frame.
+    #[display("_parent")]
+    Parent,
+    /// Opens the linked document in the full body of the window.
+    #[display("_top")]
+    Top,
+    // TODO: Add FrameName
+}
+
+impl From<Target> for Cow<'static, str> {
+    fn from(value: Target) -> Self {
+        match value {
+            Target::Blank => Cow::Borrowed("_blank"),
+            Target::Self_ => Cow::Borrowed("_self"),
+            Target::Parent => Cow::Borrowed("_parent"),
+            Target::Top => Cow::Borrowed("_top"),
+        }
+    }
+}
+
+impl Attribute for Target {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        let s = match self {
+            Target::Blank => "_blank",
+            Target::Self_ => "_self",
+            Target::Parent => "_parent",
+            Target::Top => "_top",
+        };
+
+        write!(target, " {attr}=\"{s}\"")
+    }
+}
+
+pub struct Download(Option<Cow<'static, str>>);
+
+impl From<Option<Cow<'static, str>>> for Download {
+    fn from(value: Option<Cow<'static, str>>) -> Self {
+        Self(value)
+    }
+}
+
+impl Attribute for Download {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        let Some(name) = self.0.as_ref() else {
+            return write!(target, " {attr}");
+        };
+
+        write!(
+            target,
+            "{attr}=\"{}\"",
+            html_escape::encode_double_quoted_attribute(name)
+        )
+    }
+}
+
+#[derive(Debug, Display, Clone, Copy)]
+pub enum ARel {
+    #[display("alternate")]
+    Alternate,
+    #[display("author")]
+    Author,
+    #[display("bookmark")]
+    Bookmark,
+    #[display("external")]
+    External,
+    #[display("help")]
+    Help,
+    #[display("license")]
+    License,
+    #[display("next")]
+    Next,
+    #[display("nofollow")]
+    NoFollow,
+    #[display("noopener")]
+    NoOpener,
+    #[display("noreferrer")]
+    NoReferrer,
+    #[display("prev")]
+    Prev,
+    #[display("search")]
+    Search,
+    #[display("tag")]
+    Tag,
+}
+
+pub(crate) trait Attribute {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result;
+}
+
+impl Attribute for Cow<'static, str> {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        write!(
+            target,
+            " {attr}=\"{}\"",
+            html_escape::encode_double_quoted_attribute(self)
+        )
+    }
+}
+
+impl<T: Attribute> Attribute for Option<T> {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        let Some(inner) = self else { return Ok(()) };
+
+        inner.render_attr(attr, target)
     }
 }
