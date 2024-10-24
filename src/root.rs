@@ -35,7 +35,7 @@ impl<T: FlowContent> Render for Page<T> {
                 body = body.style(style);
             }
 
-            html((head(title(self.title)), body)).fmt_html(target)
+            html((head(title(self.title)), body)).render(target)
         }
     }
 }
