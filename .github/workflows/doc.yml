@@ -28,7 +28,7 @@ jobs:
       - name: Build Documentation
         run: |
           # Enable nightly features for documentation
-          RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --no-deps --document-private-items
+          RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --no-deps
 
       - name: Add index.html redirect
         run: |
