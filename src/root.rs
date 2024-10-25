@@ -15,7 +15,6 @@ pub struct Page<T: FlowContent> {
 
 impl<T: FlowContent> Render for Page<T> {
     fn render(self, target: &mut dyn std::fmt::Write) -> std::fmt::Result {
-        
         html((head(title(self.title)), body(self.body))).render(target)
     }
 }
