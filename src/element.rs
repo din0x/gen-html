@@ -18,8 +18,6 @@ macro_rules! elem {
             class: $crate::attribute::ClassList,
             id: Option<$crate::attribute::Id>,
             lang: Option<$crate::attribute::Lang>,
-            #[cfg(feature = "css-style")]
-            style: $crate::css_style::Style,
         }
 
         impl<T: $content> $name<T> {
@@ -40,12 +38,6 @@ macro_rules! elem {
                 self.lang = Some(lang);
                 self
             }
-
-            #[cfg(feature = "css-style")]
-            pub fn style(mut self, style: $crate::css_style::Style) -> Self {
-                self.style = style;
-                self
-            }
         }
 
         impl<T: $content> $crate::Render for $name<T> {
@@ -54,14 +46,6 @@ macro_rules! elem {
 
                 if !self.class.is_empty() {
                     write!(target, " class=\"{}\"", self.class)?;
-                }
-
-                #[cfg(feature = "css-style")]
-                {
-                    let s = self.style.to_string();
-                    if !s.is_empty() {
-                        write!(target, " style=\"{}\"", s)?;
-                    }
                 }
 
                 self.id.as_ref().map(|id| write!(target, " id=\"{id}\""));

@@ -3,10 +3,6 @@ name = "gen-html"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-css-style = ["dep:css-style"]
-
 [dependencies]
-css-style = { version = "0.14.1", optional = true }
 derive_more = { version = "1.0.0", features = ["display"] }
 html-escape = "0.2.13"

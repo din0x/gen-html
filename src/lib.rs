@@ -17,7 +17,4 @@ mod private {
     pub struct _Private;
 }
 
-#[cfg(feature = "css-style")]
-pub use css_style;
-
 pub use marker::{FlowContent, NonInteractiveContent, PhrasingContent, Render};
