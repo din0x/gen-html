@@ -7,7 +7,7 @@
 
 ## Example
 ```rust 
-use gen_html::{content::h1, element::{div, p}, inline_text::a};
+use gen_html::{content::h1, inline_text::a, text_content::{div, p}};
 
 let html = div((
     h1("This is a title"),

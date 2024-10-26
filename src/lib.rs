@@ -4,12 +4,13 @@
 pub mod content;
 pub mod edits;
 pub mod inline_text;
+pub mod root;
+pub mod text_content;
 
 pub mod attribute;
 mod attrs;
-pub mod element;
+mod element;
 mod marker;
-pub mod root;
 
 mod generate;
 
