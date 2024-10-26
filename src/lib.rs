@@ -8,7 +8,6 @@ pub mod root;
 pub mod text_content;
 
 pub mod attribute;
-mod attrs;
 mod element;
 mod marker;
 
