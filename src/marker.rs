@@ -1,8 +1,25 @@
 use std::{borrow::Cow, fmt};
 
+/// Render HTML to a string.
+///
+/// This API is similar to `Display`, but it takes `self` so it can be used
+/// with iterators.
 pub trait Render: Sized {
+    /// Renders the HTML to a `target`.
+    ///
+    /// # Errors
+    ///
+    /// This function should return `Err` if, and only if, the provided `Write`
+    /// returns `Err`. HTML rendering is considered an infallible operation; this
+    /// function only returns a `Result` because writing to the underlying stream
+    /// might fail and it must provide a way to propagate the fact that an error
+    /// has occurred back up the stack.
     fn render(self, target: &mut dyn fmt::Write) -> fmt::Result;
 
+    /// Renders the HTML to a string.
+    ///
+    /// This is the method that ultimately flushes each HTML object to a
+    /// string.
     fn render_to_string(self) -> String {
         let mut s = String::new();
         self.render(&mut s)
