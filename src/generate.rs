@@ -36,15 +36,15 @@ macro_rules! create_element {
             }
 
             /// Sets the `data-*` attribute.
-            /// 
+            ///
             /// # Example
-            /// 
+            ///
             /// ```
             /// use gen_html::{text_content::p, Render};
-            /// 
+            ///
             /// let html = p("Salmon").data("animal-type", "fish");
             /// assert_eq!(html.render_to_string(), "<p data-animal-type=\"fish\">Salmon</p>");
-            /// ``` 
+            /// ```
             pub fn data(mut self, key: impl Into<::std::borrow::Cow<'static, str>>, value: impl Into<::std::borrow::Cow<'static, str>>) -> Self {
                 self.data_map.insert(key.into(), value.into());
                 self
