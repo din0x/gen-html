@@ -1,5 +1,5 @@
 use core::fmt;
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashMap};
 
 use derive_more::derive::Display;
 
@@ -230,5 +230,28 @@ impl<T: Attribute> Attribute for Option<T> {
         let Some(inner) = self else { return Ok(()) };
 
         inner.render_attr(attr, target)
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct DataMap {
+    data: HashMap<Cow<'static, str>, Cow<'static, str>>,
+}
+
+impl DataMap {
+    pub(crate) fn insert(&mut self, key: Cow<'static, str>, value: Cow<'static, str>) {
+        self.data.insert(key, value);
+    }
+}
+
+impl Attribute for DataMap {
+    fn render_attr(&self, _: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        self.data.iter().try_for_each(|(k, v)| {
+            write!(
+                target,
+                " data-{k}=\"{}\"",
+                html_escape::encode_double_quoted_attribute(v)
+            )
+        })
     }
 }
