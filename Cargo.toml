@@ -1,7 +1,15 @@
 [package]
 name = "gen-html"
+authors = ["Robert Poznański"]
 version = "0.1.0"
 edition = "2021"
+
+license = "MIT"
+description = "Generate HTML using Rust"
+repository = "https://github.com/din0x/gen-html"
+
+keywords = ["html", "web"]
+categories = ["template-engine", "web-programming"]
 
 [dependencies]
 derive_more = { version = "1.0.0", features = ["display"] }
