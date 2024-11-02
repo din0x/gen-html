@@ -240,6 +240,16 @@ pub(crate) struct DataMap {
 
 impl DataMap {
     pub(crate) fn insert(&mut self, key: Cow<'static, str>, value: Cow<'static, str>) {
+        if key
+            .split('-')
+            .map(|seg| seg.is_empty() || seg.contains(|ch: char| !ch.is_ascii_lowercase()))
+            .filter(|invalid| *invalid)
+            .count()
+            > 0
+        {
+            panic!("`key` must be kebab-case")
+        }
+
         self.data.insert(key, value);
     }
 }

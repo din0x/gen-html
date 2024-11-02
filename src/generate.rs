@@ -37,6 +37,10 @@ macro_rules! create_element {
 
             /// Sets the `data-*` attribute.
             ///
+            /// # Panics
+            ///
+            /// If `key` isn't kebab-case.
+            ///
             /// # Example
             ///
             /// ```
