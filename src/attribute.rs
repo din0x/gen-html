@@ -225,6 +225,22 @@ impl Attribute for Cow<'static, str> {
     }
 }
 
+impl Attribute for u32 {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        write!(target, " {attr}=\"{}\"", self)
+    }
+}
+
+impl Attribute for bool {
+    fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
+        if *self {
+            write!(target, " {attr}")?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<T: Attribute> Attribute for Option<T> {
     fn render_attr(&self, attr: &str, target: &mut dyn fmt::Write) -> fmt::Result {
         let Some(inner) = self else { return Ok(()) };
