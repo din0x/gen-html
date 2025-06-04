@@ -7,6 +7,7 @@ edition = "2024"
 license = "MIT"
 description = "Generate HTML using Rust"
 repository = "https://github.com/din0x/gen-html"
+readme = "../README.md"
 
 keywords = ["html", "web"]
 categories = ["template-engine", "web-programming"]
