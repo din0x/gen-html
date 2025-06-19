@@ -1,6 +1,8 @@
-use syn::{Expr, Ident, Pat};
+use std::collections::HashMap;
 
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
+use proc_macro2::Span;
+use syn::{Expr, Ident, Pat, spanned::Spanned};
 
 pub struct Template {
     pub nodes: Vec<Node>,
@@ -33,45 +35,67 @@ pub struct Element {
 impl Element {
     pub fn validate(&self) -> Result<(), Error> {
         match crate::tags::is_self_closing(&self.name.to_string()) {
-            Some(true) if self.body.is_some() => Err(Error {
-                span: self.name.span(),
-                kind: ErrorKind::SelfClosing(self.name.to_string()),
-            }),
-            Some(false) if self.body.is_none() => Err(Error {
-                span: self.name.span(),
-                kind: ErrorKind::NotSelfClosing(self.name.to_string()),
-            }),
+            Some(true) if self.body.is_some() => Err(Error::SelfClosing(self.name.clone())),
+            Some(false) if self.body.is_none() => Err(Error::NotSelfClosing(self.name.clone())),
             Some(_) => Ok(()),
-            None => Err(Error {
-                span: self.name.span(),
-                kind: ErrorKind::InvalidTag(self.name.to_string()),
-            }),
+            None => Err(Error::InvalidTag(self.name.clone())),
         }
+    }
+
+    pub fn attributes(&self) -> Result<Vec<(String, Option<Expr>)>, Error> {
+        let mut error = Error::empty();
+
+        let mut key_to_spans = HashMap::new();
+        for (span, key) in self.attr_list.iter().map(Attribute::key) {
+            key_to_spans
+                .entry(key.clone())
+                .or_insert(Vec::new())
+                .push(span);
+        }
+
+        for (key, spans) in key_to_spans
+            .into_iter()
+            .filter(|(_, spans)| spans.len() > 1)
+        {
+            error.push(Error::AttributeSpecifiedMoreThenOnce { spans, key });
+        }
+
+        if !error.is_empty() {
+            return Err(error);
+        }
+
+        Ok(self
+            .attr_list
+            .iter()
+            .map(|attr| (attr.key().1, attr.value().cloned()))
+            .collect())
     }
 }
 
-pub struct Attribute {
-    pub name: Ident,
-    pub value: Option<Expr>,
+pub enum Attribute {
+    Id(Expr),
+    Class(Expr),
+    KeyValue { key: Ident, value: Option<Expr> },
 }
 
 impl Attribute {
-    pub fn name(&self) -> Result<String, Error> {
-        let name_string = self.name.to_string();
-        let name_string = name_string.trim_start_matches("r#");
-        let is_valid = name_string
-            .chars()
-            .all(|ch| ch.is_ascii_lowercase() || ch == '_')
-            && !name_string.starts_with('_')
-            && !name_string.ends_with('_')
-            && !name_string.contains("__");
+    pub fn key(&self) -> (Span, String) {
+        match self {
+            Self::Id(id) => (id.span(), "id".to_owned()),
+            Self::Class(class) => (class.span(), "class".to_owned()),
+            Self::KeyValue { key, .. } => (
+                key.span(),
+                key.to_string().trim_start_matches("r#").replace("_", "-"),
+            ),
+        }
+    }
 
-        is_valid
-            .then(|| name_string.replace("_", "-"))
-            .ok_or(Error::new(
-                self.name.span(),
-                ErrorKind::InvalidAttributeName(name_string.to_string()),
-            ))
+    pub fn value(&self) -> Option<&Expr> {
+        match self {
+            Self::Id(id) => Some(id),
+            Self::Class(class) => Some(class),
+            Self::KeyValue { value, .. } => value.as_ref(),
+        }
     }
 }
 
