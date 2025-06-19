@@ -62,20 +62,20 @@ impl Generate for Element {
         g.push_str("<");
         g.push_str(&self.name.to_string());
 
-        for attr in &self.attr_list {
-            match attr.name() {
-                Ok(name) => {
+        match self.attributes() {
+            Ok(attributes) => {
+                for attr in attributes {
                     g.push_str(" ");
-                    g.push_str(&name);
-                }
-                Err(err) => g.push_error(err),
-            }
+                    g.push_str(&attr.0);
 
-            if let Some(value) = &attr.value {
-                g.push_str("=\"");
-                g.push_rendered_expr(value.clone());
-                g.push_str("\"");
+                    if let Some(value) = attr.1 {
+                        g.push_str("=\"");
+                        g.push_rendered_expr(value.clone());
+                        g.push_str("\"");
+                    }
+                }
             }
+            Err(err) => g.push_error(err),
         }
 
         g.push_str(">");
