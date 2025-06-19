@@ -47,7 +47,7 @@ impl Parse for Element {
         let name = Ident::parse(input)?;
         let mut attr_list = Vec::new();
 
-        while input.peek(Ident) {
+        while input.peek(Ident) || input.peek(Token![@]) || input.peek(Token![.]) {
             attr_list.push(Attribute::parse(input)?);
         }
 
@@ -70,15 +70,22 @@ impl Parse for Element {
 
 impl Parse for Attribute {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        Ok(Self {
-            name: input.parse()?,
-            value: if input.peek(Token![:]) {
-                <Token![:]>::parse(input)?;
+        if <Token![@]>::parse(input).is_ok() {
+            let id = parse_attribute_value(input)?;
+            Ok(Self::Id(id))
+        } else if <Token![.]>::parse(input).is_ok() {
+            let class = parse_attribute_value(input)?;
+            Ok(Self::Class(class))
+        } else if let Ok(key) = Ident::parse(input) {
+            let value = if <Token![:]>::parse(input).is_ok() {
                 Some(parse_attribute_value(input)?)
             } else {
                 None
-            },
-        })
+            };
+            Ok(Self::KeyValue { key, value })
+        } else {
+            Err(syn::Error::new(input.span(), "todo"))
+        }
     }
 }
 
