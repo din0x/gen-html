@@ -105,6 +105,21 @@ pub const DOCTYPE: Raw<&str> = Raw("<!DOCTYPE html>");
 /// # ;
 /// ```
 ///
+/// `@` and `.` — `id` and `class` shorthands are also allowed, and may use rust expressions.
+///
+/// ```
+/// use gen_html::html;
+///
+/// let id = "my-id";
+///
+/// let markup = html! {
+///     h1 ."font-mono" {}
+///     input @(id) r#type: "text" ;
+/// };
+///
+/// assert_eq!(markup.to_string(), r#"<h1 class="font-mono"></h1><input id="my-id" type="text">"#);
+/// ```
+///
 /// Conditional rendering with `if`.
 ///
 /// ```
