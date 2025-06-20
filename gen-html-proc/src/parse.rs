@@ -111,7 +111,6 @@ impl Parse for If {
         let then_branch = Block::parse(input)?;
         let else_branch = if <Token![else]>::parse(input).is_ok() {
             if input.peek(Token![if]) {
-                <Token![else]>::parse(input)?;
                 Some(Box::new(Node::If(Self::parse(input)?)))
             } else {
                 Some(Box::new(Node::Block(Block::parse(input)?)))
