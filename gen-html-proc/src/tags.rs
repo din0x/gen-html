@@ -1,180 +1,144 @@
-const TAGS: [(&str, bool, Status); 163] = [
-    ("html", false, Status::Current),
-    ("head", false, Status::Current),
-    ("title", false, Status::Current),
-    ("body", false, Status::Current),
-    ("base", true, Status::Current),
-    ("link", true, Status::Current),
-    ("meta", true, Status::Current),
-    ("style", false, Status::Current),
-    ("script", false, Status::Current),
-    ("noscript", false, Status::Current),
-    ("article", false, Status::Current),
-    ("aside", false, Status::Current),
-    ("footer", false, Status::Current),
-    ("header", false, Status::Current),
-    ("h1", false, Status::Current),
-    ("h2", false, Status::Current),
-    ("h3", false, Status::Current),
-    ("h4", false, Status::Current),
-    ("h5", false, Status::Current),
-    ("h6", false, Status::Current),
-    ("main", false, Status::Current),
-    ("nav", false, Status::Current),
-    ("section", false, Status::Current),
-    ("address", false, Status::Current),
-    ("blockquote", false, Status::Current),
-    ("dd", false, Status::Current),
-    ("div", false, Status::Current),
-    ("dl", false, Status::Current),
-    ("dt", false, Status::Current),
-    ("figcaption", false, Status::Current),
-    ("figure", false, Status::Current),
-    ("hr", true, Status::Current),
-    ("li", false, Status::Current),
-    ("ol", false, Status::Current),
-    ("p", false, Status::Current),
-    ("pre", false, Status::Current),
-    ("ul", false, Status::Current),
-    ("a", false, Status::Current),
-    ("abbr", false, Status::Current),
-    ("b", false, Status::Current),
-    ("bdi", false, Status::Current),
-    ("bdo", false, Status::Current),
-    ("br", true, Status::Current),
-    ("cite", false, Status::Current),
-    ("code", false, Status::Current),
-    ("data", false, Status::Current),
-    ("dfn", false, Status::Current),
-    ("em", false, Status::Current),
-    ("i", false, Status::Current),
-    ("kbd", false, Status::Current),
-    ("mark", false, Status::Current),
-    ("q", false, Status::Current),
-    ("rp", false, Status::Current),
-    ("rt", false, Status::Current),
-    ("ruby", false, Status::Current),
-    ("s", false, Status::Current),
-    ("samp", false, Status::Current),
-    ("small", false, Status::Current),
-    ("span", false, Status::Current),
-    ("strong", false, Status::Current),
-    ("sub", false, Status::Current),
-    ("sup", false, Status::Current),
-    ("time", false, Status::Current),
-    ("u", false, Status::Current),
-    ("var", false, Status::Current),
-    ("wbr", true, Status::Current),
-    ("button", false, Status::Current),
-    ("datalist", false, Status::Current),
-    ("fieldset", false, Status::Current),
-    ("form", false, Status::Current),
-    ("input", true, Status::Current),
-    ("label", false, Status::Current),
-    ("legend", false, Status::Current),
-    ("meter", false, Status::Current),
-    ("optgroup", false, Status::Current),
-    ("option", false, Status::Current),
-    ("output", false, Status::Current),
-    ("progress", false, Status::Current),
-    ("select", false, Status::Current),
-    ("textarea", false, Status::Current),
-    ("caption", false, Status::Current),
-    ("col", true, Status::Current),
-    ("colgroup", false, Status::Current),
-    ("table", false, Status::Current),
-    ("tbody", false, Status::Current),
-    ("td", false, Status::Current),
-    ("tfoot", false, Status::Current),
-    ("th", false, Status::Current),
-    ("thead", false, Status::Current),
-    ("tr", false, Status::Current),
-    ("area", true, Status::Current),
-    ("audio", false, Status::Current),
-    ("canvas", false, Status::Current),
-    ("embed", true, Status::Current),
-    ("iframe", false, Status::Current),
-    ("img", true, Status::Current),
-    ("map", false, Status::Current),
-    ("object", false, Status::Current),
-    ("param", true, Status::Current),
-    ("picture", false, Status::Current),
-    ("source", true, Status::Current),
-    ("svg", false, Status::Current),
-    ("track", true, Status::Current),
-    ("video", false, Status::Current),
-    ("details", false, Status::Current),
-    ("dialog", false, Status::Current),
-    ("menu", false, Status::Current),
-    ("summary", false, Status::Current),
-    ("slot", false, Status::Current),
-    ("template", false, Status::Current),
-    ("acronym", false, Status::Deprecated),
-    ("applet", false, Status::Deprecated),
-    ("basefont", true, Status::Deprecated),
-    ("bgsound", true, Status::Deprecated),
-    ("big", false, Status::Deprecated),
-    ("center", false, Status::Deprecated),
-    ("command", false, Status::Deprecated),
-    ("content", false, Status::Deprecated),
-    ("dir", false, Status::Deprecated),
-    ("element", false, Status::Deprecated),
-    ("font", false, Status::Deprecated),
-    ("frame", true, Status::Deprecated),
-    ("frameset", false, Status::Deprecated),
-    ("hgroup", false, Status::Deprecated),
-    ("image", true, Status::Deprecated),
-    ("isindex", true, Status::Deprecated),
-    ("keygen", true, Status::Deprecated),
-    ("listing", false, Status::Deprecated),
-    ("marquee", false, Status::NonStandard),
-    ("menuitem", false, Status::Deprecated),
-    ("multicol", false, Status::Deprecated),
-    ("nextid", true, Status::Deprecated),
-    ("nobr", false, Status::Deprecated),
-    ("noembed", false, Status::Deprecated),
-    ("noframes", false, Status::Deprecated),
-    ("plaintext", false, Status::Deprecated),
-    ("rb", false, Status::Obsolete),
-    ("rtc", false, Status::Obsolete),
-    ("shadow", false, Status::Deprecated),
-    ("spacer", true, Status::Deprecated),
-    ("strike", false, Status::Deprecated),
-    ("tt", false, Status::Deprecated),
-    ("xmp", false, Status::Deprecated),
-    ("blink", false, Status::NonStandard),
-    ("portal", false, Status::Experimental),
-    ("search", false, Status::Current),
-    ("math", false, Status::Current),
-    ("annotation", false, Status::Current),
-    ("annotation-xml", false, Status::Current),
-    ("mtext", false, Status::Current),
-    ("acronym", false, Status::Obsolete),
-    ("applet", false, Status::Obsolete),
-    ("basefont", true, Status::Obsolete),
-    ("bgsound", true, Status::Obsolete),
-    ("big", false, Status::Obsolete),
-    ("center", false, Status::Obsolete),
-    ("dir", false, Status::Obsolete),
-    ("font", false, Status::Obsolete),
-    ("frame", true, Status::Obsolete),
-    ("frameset", false, Status::Obsolete),
-    ("noframes", false, Status::Obsolete),
-    ("strike", false, Status::Obsolete),
-    ("tt", false, Status::Obsolete),
-];
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum Status {
-    Current,
-    Deprecated,
-    Obsolete,
-    NonStandard,
-    Experimental,
+pub fn is_self_closing(name: &str) -> Option<bool> {
+    ELEMENTS.contains(&name).then_some(VOID.contains(&name))
 }
 
-pub fn is_self_closing(name: &str) -> Option<bool> {
-    TAGS.iter()
-        .find_map(|(tag, is_self_closing, _)| tag.eq(&name).then_some(is_self_closing))
-        .copied()
+macro_rules! void_elements {
+    ($($tag:ident)*) => {
+        const VOID: [&str; 13] = [$(stringify!($tag),)*];
+    };
+}
+
+void_elements! {
+    area
+    base
+    br
+    col
+    embed
+    hr
+    img
+    input
+    link
+    meta
+    source
+    track
+    wbr
+}
+
+macro_rules! html_elements {
+    ($($tag:ident)*) => {
+        const ELEMENTS: [&str; 110] = [$(stringify!($tag),)*];
+    };
+}
+
+html_elements! {
+    a
+    abbr
+    address
+    area
+    article
+    aside
+    audio
+    b
+    base
+    bdi
+    bdo
+    blockquote
+    body
+    br
+    button
+    canvas
+    caption
+    cite
+    code
+    col
+    colgroup
+    data
+    datalist
+    dd
+    del
+    details
+    dfn
+    dialog
+    div
+    dl
+    dt
+    em
+    embed
+    fieldset
+    figcaption
+    figure
+    footer
+    form
+    h1
+    h2
+    h3
+    h4
+    h5
+    h6
+    head
+    header
+    hgroup
+    hr
+    html
+    i
+    iframe
+    img
+    input
+    ins
+    kbd
+    label
+    legend
+    li
+    link
+    main
+    map
+    mark
+    meta
+    meter
+    nav
+    noscript
+    object
+    ol
+    optgroup
+    option
+    output
+    p
+    param
+    picture
+    pre
+    progress
+    q
+    rp
+    rt
+    ruby
+    s
+    samp
+    script
+    section
+    select
+    small
+    source
+    span
+    strong
+    style
+    sub
+    summary
+    sup
+    table
+    tbody
+    td
+    template
+    textarea
+    tfoot
+    th
+    thead
+    time
+    title
+    tr
+    track
+    u
+    ul
+    var
+    video
+    wbr
 }
