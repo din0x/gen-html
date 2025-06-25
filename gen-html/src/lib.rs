@@ -64,20 +64,39 @@ pub const DOCTYPE: Raw<&str> = Raw("<!DOCTYPE html>");
 
 /// Generate HTML with `maud`-like syntax.
 ///
-/// # Syntax
+/// ## Elements
 ///
 /// Normal HTML elements are written with curly-braces.
 ///
 /// ```
 /// # let markup = gen_html::
 /// html! {
+///     h1 { "Lorem ipsum" }
 ///     p { "Lorem ipsum dolor sit amet." }
 /// }
-/// # ;
-/// # assert_eq!(markup.to_string(), "<p>Lorem ipsum dolor sit amet.</p>");
+/// # ; assert_eq!(markup.to_string(), "<h1>Lorem ipsum</h1><p>Lorem ipsum dolor sit amet.</p>");
 /// ```
 ///
-/// Self-closing tags require a trailing semicolon.
+/// Void elements require a trailing semicolon.
+///
+/// ```
+/// # let markup = gen_html::
+/// html! {
+///     p {
+///         "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+///         br ;
+///         "Praesent pharetra urna ex."
+///     }
+/// }
+/// # ; assert_eq!(
+/// #     markup.to_string(),
+/// #     "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.<br>Praesent pharetra urna ex.</p>",
+/// # );
+/// ```
+///
+/// ## Attributes
+///
+/// Add an attribute with `attr_name: "value"` syntax.
 ///
 /// ```
 /// # let markup = gen_html::
@@ -86,41 +105,82 @@ pub const DOCTYPE: Raw<&str> = Raw("<!DOCTYPE html>");
 ///     // gets automatically changed to `data-cooldown`
 ///     button data_cooldown: "5s" onclick: "..." { "Click me" }
 /// }
-/// # ;
-/// # assert_eq!(
+/// # ; assert_eq!(
 /// #     markup.to_string(),
-/// #     "<img src=\"logo.svg\"><button data-cooldown=\"5s\" onclick=\"...\">Click me</button>"
+/// #     r#"<img src="logo.svg"><button data-cooldown="5s" onclick="...">Click me</button>"#,
 /// # );
 /// ```
 ///
-/// Using Rust expressions inside templates.
+/// You may omit the value to create an empty attribute.
+///
+/// ```
+/// # let markup = gen_html::
+/// html! {
+///     p { "I agree to the terms of service." }
+///     input r#type: "checkbox" checked ;
+/// }
+/// # ; assert_eq!(markup.to_string(), r#"<p>I agree to the terms of service.</p><input type="checkbox" checked>"#);
+/// ```
+///
+/// Specifying the `id` and `class` can be done using the attribute syntax or their respective
+/// shorthand `@` and `.`. The `@` character was chosen due to rust syntax using `#""#` for string
+/// literals.
+///
+/// ```
+/// # let markup = gen_html::
+/// html! {
+///     div id: "my-div-1" class: "flex flex-col gap-2" { "..." }
+///     div @"my-div-2" ."flex flex-col gap-2" { "..." }
+/// }
+/// # ; assert_eq!(
+/// #     markup.to_string(),
+/// #     r#"<div id="my-div-1" class="flex flex-col gap-2">...</div><div id="my-div-2" class="flex flex-col gap-2">...</div>"#,
+/// # );
+/// ```
+///
+/// ## Inserting expressions
+///
+/// Insert arbitrary expression of type that implements the [`Render`] trait with `(expr)` syntax.
 ///
 /// ```
 /// # let name = "Bob";
-/// # _ = gen_html::
+/// # let class_list = "class-1 class-2";
+/// # let id = "my-id";
+/// # let markup = gen_html::
 /// html! {
-///     p { (format!("Hello {name}")) }
+///     p {
+///         "Hello " (name)
+///     }
 ///     img src: (format!("assets/{name}/profile-picture.png")) ;
+///     // Also with the shorthand syntax
+///     div @(id) .(class_list) {}
 /// }
-/// # ;
+/// # ; assert_eq!(
+/// #     markup.to_string(),
+/// #     r#"<p>Hello Bob</p><img src="assets/Bob/profile-picture.png"><div id="my-id" class="class-1 class-2"></div>"#,
+/// # );
 /// ```
 ///
-/// `@` and `.` — `id` and `class` shorthands are also allowed, and may use rust expressions.
-///
-/// ```
-/// use gen_html::html;
-///
-/// let id = "my-id";
-///
-/// let markup = html! {
-///     h1 ."font-mono" {}
-///     input @(id) r#type: "text" ;
-/// };
-///
-/// assert_eq!(markup.to_string(), r#"<h1 class="font-mono"></h1><input id="my-id" type="text">"#);
-/// ```
+/// ## Control structures
 ///
 /// Conditional rendering with `if`.
+///
+/// ```
+/// # let age = 19;
+/// # let markup = gen_html::
+/// html! {
+///     if age < 18 {
+///         p { "You're not old enough" }
+///     } else if age == 18 {
+///         p { "Just in time" }
+///     } else {
+///         p { "Hi" }
+///     }
+/// }
+/// # ; assert_eq!(markup.to_string(), "<p>Hi</p>");
+/// ```
+///
+/// `if let` is also supported.
 ///
 /// ```
 /// # let name = Some("Steve");
@@ -149,7 +209,7 @@ pub const DOCTYPE: Raw<&str> = Raw("<!DOCTYPE html>");
 /// # ;
 /// ```
 ///
-/// Repeating markup with `for`.
+/// Use `for` to loop over elements of an iterator.
 ///
 /// ```
 /// # let titles = ["Titanic"];
