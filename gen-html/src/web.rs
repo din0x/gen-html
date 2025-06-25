@@ -1,4 +1,5 @@
 #[cfg(feature = "axum")]
+#[cfg_attr(docsrs, doc(cfg(feature = "axum")))]
 mod axum {
     use crate::Raw;
     use axum::response::{Html, IntoResponse, Response};
@@ -11,6 +12,7 @@ mod axum {
 }
 
 #[cfg(feature = "actix-web")]
+#[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
 mod actix_web {
     use crate::Raw;
     use actix_web::{

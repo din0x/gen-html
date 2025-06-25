@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 //! `gen-html` is a templating library for generating HTML from Rust.
 //!
 //! # Features
