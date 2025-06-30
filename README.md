@@ -45,6 +45,10 @@ let markup = render_fn(|f| {
 /* ... */
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
 ## License
 
 This project is licensed under [MIT license](LICENSE).
