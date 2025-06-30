@@ -19,30 +19,17 @@
 ```rust
 use gen_html::html;
 
+let series = ["Breaking Bad", "Better Call Saul", "Dexter"];
+
 let markup = html! {
-    for i in 1..=3 {
-        span { (i.to_string()) }
+    ol {
+        for title in series {
+            li { (title) }
+        }
     }
 };
 
 println!("{}", markup);
-```
-
-The `html!` macro roughly expands to this code.
-
-```rust
-use gen_html::{Render, render_fn};
-
-let markup = render_fn(|f| {
-    for i in 1..=3 {
-        f.write_str("<span>")?;
-        (&i.to_string()).render_to(f)?;
-        f.write_str("</span>")?;
-    }
-    Ok(())
-});
-
-/* ... */
 ```
 
 ## Contributing
