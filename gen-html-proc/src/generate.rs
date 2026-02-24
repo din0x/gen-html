@@ -64,14 +64,16 @@ impl Generate for Element {
 
         match self.attributes() {
             Ok(attributes) => {
-                for attr in attributes {
-                    g.push_str(" ");
-                    g.push_str(&attr.0);
-
-                    if let Some(value) = attr.1 {
-                        g.push_str("=\"");
-                        g.push_rendered_expr(value.clone());
-                        g.push_str("\"");
+                for (name, value) in attributes {
+                    if let Some(value) = value {
+                        let output = &g.output_ident;
+    
+                        g.push_stmt(parse_quote! {
+                            ::gen_html::Value::render_value_to(&#value, #name, #output)?;
+                        });
+                    } else {
+                        g.push_str(" ");
+                        g.push_str(&name);
                     }
                 }
             }
