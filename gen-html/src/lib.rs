@@ -45,6 +45,7 @@
 
 mod escape;
 mod render;
+mod value;
 mod web;
 
 /// The `<!DOCTYPE html>` string literal.
@@ -231,3 +232,4 @@ pub use gen_html_proc::html;
 
 pub use escape::Escaped;
 pub use render::{Raw, Render, RenderFn, render_fn};
+pub use value::Value;
