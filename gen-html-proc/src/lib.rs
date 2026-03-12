@@ -2,7 +2,6 @@ use syn::parse_macro_input;
 
 mod ast;
 mod error;
-mod escape;
 mod generate;
 mod parse;
 mod tags;

@@ -1,13 +1,12 @@
 use crate::{
     ast::{Block, Element, ForLoop, If, Match, Node, Template},
     error::Error,
-    escape::escape_html,
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{
-    Expr, ExprBlock, ExprForLoop, ExprIf, ExprLit, ExprMatch, Ident, Lit, Stmt, Token, parse_quote,
-    token::Brace,
+    Expr, ExprBlock, ExprForLoop, ExprIf, ExprMatch, Ident, Stmt, Token, parse_quote,
+    spanned::Spanned, token::Brace,
 };
 
 impl Template {
@@ -24,94 +23,86 @@ impl Template {
     }
 }
 
-trait Generate {
-    fn generate(&self, g: &mut Generator);
+trait Build {
+    fn generate(&self, ctx: &mut Context);
 
     fn finish(&self, output_ident: Ident) -> syn::Block {
-        let mut g = Generator::new(output_ident);
-        self.generate(&mut g);
-        g.finish()
+        let mut ctx = Context::new(output_ident);
+        self.generate(&mut ctx);
+        ctx.finish()
     }
 }
 
-impl Generate for Template {
-    fn generate(&self, g: &mut Generator) {
-        self.nodes.iter().for_each(|node| node.generate(g));
+impl Build for Template {
+    fn generate(&self, ctx: &mut Context) {
+        self.nodes.iter().for_each(|node| node.generate(ctx));
     }
 }
 
-impl Generate for Node {
-    fn generate(&self, g: &mut Generator) {
+impl Build for Node {
+    fn generate(&self, ctx: &mut Context) {
         match self {
-            Self::Element(elem) => elem.generate(g),
-            Self::Block(block) => block.generate(g),
-            Self::Expr(expr) => expr.generate(g),
-            Self::If(if_) => if_.generate(g),
-            Self::Match(match_) => match_.generate(g),
-            Self::ForLoop(for_loop) => for_loop.generate(g),
+            Self::Element(elem) => elem.generate(ctx),
+            Self::Block(block) => block.generate(ctx),
+            Self::Expr(expr) => expr.generate(ctx),
+            Self::If(if_) => if_.generate(ctx),
+            Self::Match(match_) => match_.generate(ctx),
+            Self::ForLoop(for_loop) => for_loop.generate(ctx),
         }
     }
 }
 
-impl Generate for Element {
-    fn generate(&self, g: &mut Generator) {
+impl Build for Element {
+    fn generate(&self, ctx: &mut Context) {
         if let Err(err) = self.validate() {
-            g.push_error(err);
+            ctx.push(Part::Error(err));
         }
 
-        g.push_str("<");
-        g.push_str(&self.name.to_string());
+        ctx.push(Part::Raw(format!("<{}", self.name)));
 
         match self.attributes() {
             Ok(attributes) => {
                 for (name, value) in attributes {
                     if let Some(value) = value {
-                        let output = &g.output_ident;
-    
-                        g.push_stmt(parse_quote! {
-                            ::gen_html::Value::render_value_to(&#value, #name, #output)?;
-                        });
+                        ctx.parts.push(Part::Attribute { name, value });
                     } else {
-                        g.push_str(" ");
-                        g.push_str(&name);
+                        ctx.push(Part::Raw(format!(" {name}")));
                     }
                 }
             }
-            Err(err) => g.push_error(err),
+            Err(err) => ctx.push(Part::Error(err)),
         }
 
-        g.push_str(">");
+        ctx.push(Part::Raw(">".into()));
 
         if let Some(body) = &self.body {
-            body.generate(g);
-            g.push_str("</");
-            g.push_str(&self.name.to_string());
-            g.push_str(">");
+            body.generate(ctx);
+            ctx.push(Part::Raw(format!("</{}>", self.name)));
         }
     }
 }
 
-impl Generate for Block {
-    fn generate(&self, g: &mut Generator) {
-        self.nodes.iter().for_each(|node| node.generate(g));
+impl Build for Block {
+    fn generate(&self, ctx: &mut Context) {
+        self.nodes.iter().for_each(|node| node.generate(ctx));
     }
 }
 
-impl Generate for Expr {
-    fn generate(&self, g: &mut Generator) {
-        g.push_rendered_expr(self.clone());
+impl Build for Expr {
+    fn generate(&self, ctx: &mut Context) {
+        ctx.push(Part::Render(self.clone()));
     }
 }
 
-impl Generate for If {
-    fn generate(&self, g: &mut Generator) {
-        let then_branch = self.then_branch.finish(g.output_ident.clone());
+impl Build for If {
+    fn generate(&self, ctx: &mut Context) {
+        let then_branch = self.then_branch.finish(ctx.output.clone());
         let else_branch = self
             .else_branch
             .as_ref()
-            .map(|branch| branch.finish(g.output_ident.clone()));
+            .map(|branch| branch.finish(ctx.output.clone()));
 
-        g.push_stmt(Stmt::Expr(
+        ctx.push(Part::Stmt(Stmt::Expr(
             ExprIf {
                 attrs: Vec::new(),
                 if_token: <Token![if]>::default(),
@@ -130,13 +121,13 @@ impl Generate for If {
             }
             .into(),
             Some(<Token![;]>::default()),
-        ));
+        )));
     }
 }
 
-impl Generate for Match {
-    fn generate(&self, g: &mut Generator) {
-        g.push_stmt(Stmt::Expr(
+impl Build for Match {
+    fn generate(&self, ctx: &mut Context) {
+        ctx.push(Part::Stmt(Stmt::Expr(
             ExprMatch {
                 attrs: Vec::new(),
                 match_token: Default::default(),
@@ -155,7 +146,7 @@ impl Generate for Match {
                         body: Box::new(Expr::Block(ExprBlock {
                             attrs: Vec::new(),
                             label: None,
-                            block: arm.body.finish(g.output_ident.clone()),
+                            block: arm.body.finish(ctx.output.clone()),
                         })),
                         fat_arrow_token: Default::default(),
                         comma: Some(Default::default()),
@@ -164,17 +155,17 @@ impl Generate for Match {
             }
             .into(),
             Some(<Token![;]>::default()),
-        ))
+        )))
     }
 }
 
-impl Generate for ForLoop {
-    fn generate(&self, g: &mut Generator) {
+impl Build for ForLoop {
+    fn generate(&self, ctx: &mut Context) {
         let pat = Box::new(self.pat.clone());
         let expr = Box::new(self.expr.clone());
-        let body = self.body.finish(g.output_ident.clone());
+        let body = self.body.finish(ctx.output.clone());
 
-        g.push_stmt(Stmt::Expr(
+        ctx.push(Part::Stmt(Stmt::Expr(
             Expr::ForLoop(ExprForLoop {
                 attrs: Vec::new(),
                 for_token: <Token![for]>::default(),
@@ -185,37 +176,30 @@ impl Generate for ForLoop {
                 expr,
             }),
             None,
-        ));
+        )));
     }
 }
 
-struct Generator {
-    output_ident: Ident,
+struct Context {
+    output: Ident,
     parts: Vec<Part>,
 }
 
-impl Generator {
-    fn new(output_ident: Ident) -> Self {
+impl Context {
+    fn new(output: Ident) -> Self {
         Self {
-            output_ident,
+            output,
             parts: Vec::new(),
         }
     }
 
     fn finish(self) -> syn::Block {
-        let output_ident = self.output_ident;
-        let mut stmts = Vec::new();
-
-        for part in self.parts {
-            match part {
-                Part::Static(lit) => {
-                    stmts.push(parse_quote! {
-                        ::std::fmt::Display::fmt(#lit, #output_ident)?;
-                    });
-                }
-                Part::Dynamic(dynamic_stmt) => stmts.push(dynamic_stmt),
-            }
-        }
+        let output = self.output;
+        let stmts = self
+            .parts
+            .into_iter()
+            .map(|part| part.into_stmt(&output))
+            .collect();
 
         syn::Block {
             brace_token: Brace::default(),
@@ -223,37 +207,55 @@ impl Generator {
         }
     }
 
-    fn push_str(&mut self, s: &str) {
-        if let Some(Part::Static(lit)) = self.parts.last_mut() {
-            lit.push_str(s);
-        } else {
-            self.parts.push(Part::Static(s.to_owned()));
+    fn push(&mut self, part: Part) {
+        match (part, self.parts.last_mut()) {
+            (Part::Raw(raw), Some(Part::Raw(last))) => last.push_str(&raw),
+            (part, _) => self.parts.push(part),
         }
-    }
-
-    fn push_rendered_expr(&mut self, expr: Expr) {
-        let output_ident = &self.output_ident;
-
-        match expr {
-            Expr::Lit(ExprLit {
-                lit: Lit::Str(lit), ..
-            }) => self.push_str(&escape_html(&lit.value())),
-            expr => self.push_stmt(parse_quote! {
-                ::gen_html::Render::render_to(&#expr, #output_ident)?;
-            }),
-        }
-    }
-
-    fn push_stmt(&mut self, stmt: Stmt) {
-        self.parts.push(Part::Dynamic(stmt));
-    }
-
-    fn push_error(&mut self, err: Error) {
-        self.parts.push(Part::Dynamic(parse_quote! { #err }));
     }
 }
 
 enum Part {
-    Static(String),
-    Dynamic(Stmt),
+    Render(Expr),
+    Attribute { name: String, value: Expr },
+
+    Raw(String),
+    Stmt(Stmt),
+
+    Error(Error),
+}
+
+impl Part {
+    fn into_stmt(self, output: &Ident) -> Stmt {
+        match self {
+            Self::Raw(lit) => {
+                parse_quote! { ::std::fmt::Display::fmt(#lit, #output)?; }
+            }
+            Self::Render(expr) => {
+                let expr = ref_with_same_span(expr);
+
+                parse_quote! {
+                    ::gen_html::Render::render_to(#expr, #output)?;
+                }
+            }
+            Self::Attribute { name, value } => {
+                let value = ref_with_same_span(value);
+
+                parse_quote! {
+                    ::gen_html::Value::render_value_to(#value, #name, #output)?;
+                }
+            }
+            Self::Error(err) => parse_quote! { #err },
+            Self::Stmt(stmt) => stmt,
+        }
+    }
+}
+
+fn ref_with_same_span(expr: Expr) -> Expr {
+    Expr::Reference(syn::ExprReference {
+        attrs: Vec::new(),
+        and_token: Token![&](expr.span()),
+        mutability: None,
+        expr: Box::new(expr),
+    })
 }
