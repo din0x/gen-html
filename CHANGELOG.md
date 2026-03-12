@@ -1,5 +1,10 @@
 # Changelog
 
+## `0.4.0`
+
+- Optional attributes via `Value` trait.
+- Template expander v2, this will allow static templates it the future.  
+
 ## `0.3.0`
 
 - Add `@` and `.` shorthands
