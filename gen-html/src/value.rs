@@ -3,13 +3,13 @@ use std::fmt::{self, Write};
 
 /// Types that can be used as attribute values in the [`html!`] macro.
 ///
-/// | Value | Renders the attribute? |
-/// |------|---------:|
-/// | `T` | ✓ |
-/// | `true` | ✓ |
-/// | `false` | ✗ |
-/// | [`Some<T>`] | ✓ |
-/// | [`None`] | ✗ |
+/// | Value       | Renders the attribute? |
+/// |-------------|-----------------------:|
+/// | `T`         |                      ✓ |
+/// | `true`      |                      ✓ |
+/// | `false`     |                      ✗ |
+/// | [`Some<T>`] |                      ✓ |
+/// | [`None`]    |                      ✗ |
 ///
 /// `where T: Render`
 ///
