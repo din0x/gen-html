@@ -67,166 +67,207 @@ pub const DOCTYPE: Raw<&str> = Raw("<!DOCTYPE html>");
 
 /// Generate HTML with `maud`-like syntax.
 ///
-/// ## Elements
+/// The `html!` macro allows you to write HTML using a `maud`-like syntax while
+/// being as efficient as writing to a [`String`] by hand.
 ///
-/// Normal HTML elements are written with curly-braces.
+/// # HTML elements
+///
+/// Elements are written using their tag name followed by curly braces
+/// containing their children.
 ///
 /// ```
-/// # let markup = gen_html::
+/// # use gen_html::html;
+/// # let markup =
 /// html! {
-///     h1 { "Lorem ipsum" }
-///     p { "Lorem ipsum dolor sit amet." }
+///     h1 { "Hello world" }
+///     p { "This is a paragraph." }
 /// }
-/// # ; assert_eq!(markup.to_string(), "<h1>Lorem ipsum</h1><p>Lorem ipsum dolor sit amet.</p>");
-/// ```
+/// # ;
 ///
-/// Void elements require a trailing semicolon.
-///
-/// ```
-/// # let markup = gen_html::
-/// html! {
-///     p {
-///         "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-///         br ;
-///         "Praesent pharetra urna ex."
-///     }
-/// }
-/// # ; assert_eq!(
+/// # assert_eq!(
 /// #     markup.to_string(),
-/// #     "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.<br>Praesent pharetra urna ex.</p>",
+/// #     "<h1>Hello world</h1><p>This is a paragraph.</p>"
 /// # );
 /// ```
 ///
-/// ## Attributes
-///
-/// Add an attribute with `attr_name: "value"` syntax.
+/// Void elements (elements without closing tags) use a trailing semicolon.
 ///
 /// ```
-/// # let markup = gen_html::
+/// # use gen_html::html;
+/// # let markup =
 /// html! {
-///     img src: "logo.svg" ;
-///     // gets automatically changed to `data-cooldown`
-///     button data_cooldown: "5s" onclick: "..." { "Click me" }
+///     "First line"
+///     br;
+///     "Second line"
 /// }
-/// # ; assert_eq!(
+/// # ;
+/// # assert_eq!(markup.to_string(), "First line<br>Second line");
+/// ```
+///
+/// # Attributes
+///
+/// Attributes are written using `name: value`.
+///
+/// ```
+/// # use gen_html::html;
+/// # let markup =
+/// html! {
+///     a href: "https://example.com" { "Visit site" }
+/// }
+/// # ;
+/// # assert_eq!(
 /// #     markup.to_string(),
-/// #     r#"<img src="logo.svg"><button data-cooldown="5s" onclick="...">Click me</button>"#,
+/// #     r#"<a href="https://example.com">Visit site</a>"#
 /// # );
 /// ```
 ///
-/// You may omit the value to create an empty attribute.
+/// Boolean attributes may omit the value.
 ///
 /// ```
-/// # let markup = gen_html::
+/// # use gen_html::html;
+/// # let markup =
 /// html! {
-///     p { "I agree to the terms of service." }
-///     input r#type: "checkbox" checked ;
+///     input r#type: "checkbox" checked;
 /// }
-/// # ; assert_eq!(markup.to_string(), r#"<p>I agree to the terms of service.</p><input type="checkbox" checked>"#);
-/// ```
-///
-/// Specifying the `id` and `class` can be done using the attribute syntax or their respective
-/// shorthand `@` and `.`. The `@` character was chosen due to rust syntax using `#""#` for string
-/// literals.
-///
-/// ```
-/// # let markup = gen_html::
-/// html! {
-///     div id: "my-div-1" class: "flex flex-col gap-2" { "..." }
-///     div @"my-div-2" ."flex flex-col gap-2" { "..." }
-/// }
-/// # ; assert_eq!(
+/// # ;
+/// # assert_eq!(
 /// #     markup.to_string(),
-/// #     r#"<div id="my-div-1" class="flex flex-col gap-2">...</div><div id="my-div-2" class="flex flex-col gap-2">...</div>"#,
+/// #     r#"<input type="checkbox" checked>"#
 /// # );
 /// ```
 ///
-/// ## Inserting expressions
+/// # Shorthand syntax
 ///
-/// Insert arbitrary expression of type that implements the [`Render`] trait with `(expr)` syntax.
+/// Instead of writing `id` and `class` you may use `@` and `.` respectively.
+///
+/// - `@"container"` ==> `id: "container"`
+/// - `."flex gap-2"` ==> `class: "flex gap-2"`
 ///
 /// ```
-/// # let name = "Bob";
-/// # let class_list = "class-1 class-2";
-/// # let id = "my-id";
-/// # let markup = gen_html::
+/// # use gen_html::html;
+/// # let markup =
 /// html! {
-///     p {
-///         "Hello " (name)
-///     }
-///     img src: (format!("assets/{name}/profile-picture.png")) ;
-///     // Also with the shorthand syntax
-///     div @(id) .(class_list) {}
+///     div @"container" ."flex gap-2" { "content" }
 /// }
-/// # ; assert_eq!(
+/// # ;
+/// # assert_eq!(
 /// #     markup.to_string(),
-/// #     r#"<p>Hello Bob</p><img src="assets/Bob/profile-picture.png"><div id="my-id" class="class-1 class-2"></div>"#,
+/// #     r#"<div id="container" class="flex gap-2">content</div>"#
 /// # );
 /// ```
 ///
-/// ## Control structures
+/// # Inserting expressions
 ///
-/// Conditional rendering with `if`.
+/// Use `(expr)` to insert any Rust expression implementing [`Render`].
 ///
 /// ```
-/// # let age = 19;
-/// # let markup = gen_html::
+/// # use gen_html::html;
+/// let name = "Alice";
+///
+/// # let markup =
 /// html! {
-///     if age < 18 {
-///         p { "You're not old enough" }
-///     } else if age == 18 {
-///         p { "Just in time" }
+///     p { "Hello " (name) "!" }
+/// }
+/// # ;
+/// # assert_eq!(markup.to_string(), "<p>Hello Alice!</p>");
+/// ```
+///
+/// Expressions that implement [`Value`] may be used inside attributes. See its documentation for more details.
+///
+/// ```
+/// # use gen_html::html;
+/// let path = "/assets/logo.svg";
+/// let description = "Company logo";
+///
+/// # let markup =
+/// html! {
+///     img src: (path) alt: (description);
+/// }
+/// # ;
+/// # assert_eq!(
+/// #     markup.to_string(),
+/// #     r#"<img src="/assets/logo.svg" alt="Company logo">"#
+/// # );
+/// ```
+///
+/// # Control structures
+///
+/// ## `if`
+///
+/// ```
+/// # use gen_html::html;
+/// let logged_in = true;
+///
+/// # let markup =
+/// html! {
+///     if logged_in {
+///         p { "Welcome back!" }
 ///     } else {
-///         p { "Hi" }
+///         p { "Please log in." }
 ///     }
 /// }
-/// # ; assert_eq!(markup.to_string(), "<p>Hi</p>");
+/// # ;
+/// # assert_eq!(markup.to_string(), "<p>Welcome back!</p>");
 /// ```
 ///
-/// `if let` is also supported.
+/// ## `if let`
 ///
 /// ```
-/// # let name = Some("Steve");
-/// # _ = gen_html::
+/// # use gen_html::html;
+/// let name = Some("Damian");
+///
+/// # let markup =
 /// html! {
 ///     if let Some(name) = name {
 ///         (name)
 ///     } else {
-///         "stranger"
+///        "stranger"
 ///     }
 /// }
 /// # ;
+/// # assert_eq!(markup.to_string(), "Damian");
 /// ```
 ///
-/// Pattern matching using `match`.
+/// ## `match`
 ///
 /// ```
-/// # let age = 23;
-/// # _ = gen_html::
-/// html! {
-///     match age {
-///         ..18 => "You're not old enough",
-///         18.. => p { "Hello world" }
-///     }
-/// }
-/// # ;
-/// ```
-///
-/// Use `for` to loop over elements of an iterator.
-///
-/// ```
-/// # let titles = ["Titanic"];
 /// # use gen_html::html;
-/// # _ =
+/// let status = 404;
+///
+/// # let markup =
 /// html! {
-///     h1 { "Available movies" }
+///     match status {
+///         200 => p { "OK" },
+///         404 => p { "Not found" },
+///         _ => p { "Unknown status" }
+///     }
+/// }
+/// # ;
+/// # assert_eq!(markup.to_string(), "<p>Not found</p>");
+/// ```
+///
+/// ## `for`
+///
+/// Use `for` loops to render repeated elements from an iterator.
+///
+/// ```
+/// # use gen_html::html;
+/// let shows = ["Breaking Bad", "Planet Earth II", "Chernobyl"];
+///
+/// # let markup =
+/// html! {
+///     h1 { "Popular TV shows" }
 ///     ul {
-///         for title in titles {
+///         for title in shows {
 ///             li { (title) }
 ///         }
 ///     }
 /// }
 /// # ;
+/// # assert_eq!(
+/// #     markup.to_string(),
+/// #     "<h1>Popular TV shows</h1><ul><li>Breaking Bad</li><li>Planet Earth II</li><li>Chernobyl</li></ul>"
+/// # );
 /// ```
 pub use gen_html_proc::html;
 
