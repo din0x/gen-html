@@ -1,13 +1,52 @@
 use crate::Render;
 use std::fmt::{self, Write};
 
-/// Types that can be used as attributes in the [`html!`] macro.
+/// Types that can be used as attribute values in the [`html!`] macro.
 ///
-/// Direct usage of this trait is discouraged. It's only supposed to be used by [`html!`] macro
-/// internally.
+/// | Value | Renders the attribute? |
+/// |------|---------:|
+/// | `T` | ✓ |
+/// | `true` | ✓ |
+/// | `false` | ✗ |
+/// | [`Some<T>`] | ✓ |
+/// | [`None`] | ✗ |
+///
+/// `where T: Render`
+///
+/// # Examples
+///
+/// Passing a [`bool`] conditionally renders a boolean attribute.
+///
+/// ```
+/// # use gen_html::{html, Render};
+/// let checked = true;
+///
+/// let markup = html! {
+///     input r#type: "checkbox" checked: (checked);
+/// };
+///
+/// assert_eq!(markup.render().0, r#"<input type="checkbox" checked>"#);
+/// ```
+///
+/// To conditionally include an attribute with a value, pass an [`Option<T>`].
+/// The attribute is only rendered when the value is [`Some`].
+///
+/// ```
+/// # use gen_html::{html, Render};
+/// let cooldown = Some("200ms");
+///
+/// let markup = html! {
+///     button data_cooldown: (cooldown) {
+///         "click me"
+///     }
+/// };
+///
+/// assert_eq!(markup.render().0, r#"<button data-cooldown="200ms">click me</button>"#);
+/// ```
 ///
 /// [`html!`]: crate::html
-pub trait Value {
+pub trait Value: private::Sealed {
+    #[doc(hidden)]
     fn render_value_to(&self, name: &str, f: &mut fmt::Formatter) -> fmt::Result;
 }
 
@@ -37,6 +76,12 @@ impl<R: Render> Value for R {
 
         Ok(())
     }
+}
+
+mod private {
+    pub trait Sealed {}
+
+    impl<T: crate::Value> Sealed for T {}
 }
 
 #[cfg(test)]
