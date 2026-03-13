@@ -4,7 +4,7 @@
 
 - `let` bindings in templates
 - Optional attributes via `Value` trait
-- Template expander v2, this will allow static templates it the future. 
+- Template expander v2, this will allow static templates it the future
 
 ## `0.3.0`
 
