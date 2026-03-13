@@ -1,12 +1,12 @@
 use crate::{
-    ast::{Block, Element, ForLoop, If, Match, Node, Template},
+    ast::{Block, Element, ForLoop, If, Let, Match, Node, Template},
     error::Error,
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{
-    Expr, ExprBlock, ExprForLoop, ExprIf, ExprMatch, Ident, Stmt, Token, parse_quote,
-    spanned::Spanned, token::Brace,
+    Expr, ExprBlock, ExprForLoop, ExprIf, ExprMatch, Ident, Local, LocalInit, Stmt, Token,
+    parse_quote, spanned::Spanned, token::Brace,
 };
 
 impl Template {
@@ -48,6 +48,7 @@ impl Build for Node {
             Self::If(if_) => if_.generate(ctx),
             Self::Match(match_) => match_.generate(ctx),
             Self::ForLoop(for_loop) => for_loop.generate(ctx),
+            Self::Let(let_) => let_.generate(ctx),
         }
     }
 }
@@ -177,6 +178,22 @@ impl Build for ForLoop {
             }),
             None,
         )));
+    }
+}
+
+impl Build for Let {
+    fn generate(&self, ctx: &mut Context) {
+        ctx.push(Part::Stmt(Stmt::Local(Local {
+            attrs: Vec::new(),
+            let_token: <Token![let]>::default(),
+            pat: self.pat.clone(),
+            init: Some(LocalInit {
+                eq_token: <Token![=]>::default(),
+                expr: Box::new(self.expr.clone()),
+                diverge: None,
+            }),
+            semi_token: <Token![;]>::default(),
+        })));
     }
 }
 

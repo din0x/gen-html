@@ -248,8 +248,6 @@ pub const DOCTYPE: Raw<&str> = Raw("<!DOCTYPE html>");
 ///
 /// ## `for`
 ///
-/// Use `for` loops to render repeated elements from an iterator.
-///
 /// ```
 /// # use gen_html::html;
 /// let shows = ["Breaking Bad", "Planet Earth II", "Chernobyl"];
@@ -267,6 +265,28 @@ pub const DOCTYPE: Raw<&str> = Raw("<!DOCTYPE html>");
 /// # assert_eq!(
 /// #     markup.to_string(),
 /// #     "<h1>Popular TV shows</h1><ul><li>Breaking Bad</li><li>Planet Earth II</li><li>Chernobyl</li></ul>"
+/// # );
+/// ```
+///
+/// ## `let`
+///
+/// ```
+/// # use gen_html::html;
+/// # let markup =
+/// html! {
+///     let src = "/assets/welcome.svg";
+///     img src: (src);
+///
+///     // You may also provide the type:
+///     let src: &str = "/assets/welcome.svg";
+///
+///     // let Some(src) = ... else { ... };
+///     // ERROR: Only irrefutable patterns are supported
+/// }
+/// # ;
+/// # assert_eq!(
+/// #     markup.to_string(),
+/// #     "<img src=\"/assets/welcome.svg\">"
 /// # );
 /// ```
 pub use gen_html_proc::html;

@@ -15,6 +15,7 @@ pub enum Node {
     If(If),
     Match(Match),
     ForLoop(ForLoop),
+    Let(Let),
 }
 
 impl Node {
@@ -124,4 +125,9 @@ pub struct ForLoop {
     pub pat: Pat,
     pub expr: Expr,
     pub body: Block,
+}
+
+pub struct Let {
+    pub pat: Pat,
+    pub expr: Expr,
 }

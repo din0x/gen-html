@@ -1,6 +1,6 @@
-use crate::ast::{Arm, Attribute, Block, Element, ForLoop, If, Match, Node, Template};
+use crate::ast::{Arm, Attribute, Block, Element, ForLoop, If, Let, Match, Node, Template};
 use syn::{
-    Expr, ExprLit, Ident, Lit, LitStr, Pat, Token, braced, parenthesized,
+    Expr, ExprLit, Ident, Lit, LitStr, Pat, PatType, Token, Type, braced, parenthesized,
     parse::{self, Parse},
     token,
 };
@@ -25,6 +25,8 @@ impl Parse for Node {
             Match::parse(input).map(Self::Match)
         } else if input.peek(Token![for]) {
             ForLoop::parse(input).map(Self::ForLoop)
+        } else if input.peek(Token![let]) {
+            Let::parse(input).map(Self::Let)
         } else if input.peek(token::Paren) {
             let content;
             parenthesized!(content in input);
@@ -176,6 +178,30 @@ impl Parse for ForLoop {
         let body = Block::parse(input)?;
 
         Ok(Self { pat, expr, body })
+    }
+}
+
+impl Parse for Let {
+    fn parse(input: parse::ParseStream) -> syn::Result<Self> {
+        <Token![let]>::parse(input)?;
+
+        let mut pat = Pat::parse_single(input)?;
+        if input.peek(Token![:]) {
+            let colon_token = <Token![:]>::parse(input)?;
+            let ty = Type::parse(input)?;
+            pat = Pat::Type(PatType {
+                attrs: Vec::new(),
+                pat: Box::new(pat),
+                colon_token,
+                ty: Box::new(ty),
+            });
+        }
+
+        <Token![=]>::parse(input)?;
+        let expr = Expr::parse(input)?;
+        <Token![;]>::parse(input)?;
+
+        Ok(Self { pat, expr })
     }
 }
 
